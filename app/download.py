@@ -25,7 +25,7 @@ def download_audio(url: str, episode_id: int) -> tuple[str, str]:
     title = result.stdout.strip() or f"Episode {episode_id}"
 
     # Download audio only
-    subprocess.run(
+    result = subprocess.run(
         _yt_dlp_args([
             "-x",
             "--audio-format", "mp3",
@@ -35,8 +35,10 @@ def download_audio(url: str, episode_id: int) -> tuple[str, str]:
             url,
         ]),
         capture_output=True, text=True, timeout=600,
-        check=True,
     )
+    if result.returncode != 0:
+        stderr = result.stderr.strip() or result.stdout.strip()
+        raise RuntimeError(f"yt-dlp failed: {stderr[-800:]}")
 
     # Find the downloaded file
     audio_path = str(AUDIO_DIR / f"episode_{episode_id}.mp3")
