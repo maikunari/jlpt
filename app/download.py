@@ -32,6 +32,7 @@ def download_audio(url: str, episode_id: int) -> tuple[str, str]:
             "--audio-quality", "0",
             "-o", output_template,
             "--no-playlist",
+            "--extractor-arg", "youtube:player_client=android,web_creator",
             url,
         ]),
         capture_output=True, text=True, timeout=600,
