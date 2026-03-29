@@ -227,19 +227,19 @@
   .extraction-top {
     display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px;
   }
-  .ext-japanese { font-size: 18px; font-weight: 700; line-height: 2; }
+  .ext-japanese { font-size: 20px; font-weight: 700; line-height: 2.2; }
   .ext-japanese ruby { ruby-position: over; }
-  .ext-japanese rt { font-size: 10px; font-weight: 400; color: var(--text-dim); }
-  .ext-reading { font-size: 13px; color: var(--text-dim); }
-  .ext-english { font-size: 14px; margin-bottom: 6px; }
+  .ext-japanese rt { font-size: 11px; font-weight: 400; color: var(--text-dim); }
+  .ext-reading { font-size: 14px; color: var(--text-dim); }
+  .ext-english { font-size: 15px; margin-bottom: 8px; }
   .ext-context {
-    font-size: 13px; color: var(--text-dim); padding: 6px 10px;
+    font-size: 14px; color: var(--text-dim); padding: 6px 10px;
     border-left: 2px solid var(--border); margin-bottom: 6px;
   }
-  .ext-note { font-size: 12px; color: var(--text-dim); font-style: italic; }
-  .ext-tags { display: flex; gap: 4px; margin-top: 6px; }
+  .ext-note { font-size: 13px; color: var(--text-dim); font-style: italic; }
+  .ext-tags { display: flex; gap: 4px; margin-top: 8px; }
   .ext-tag {
-    padding: 1px 6px; border-radius: 3px; font-size: 11px;
+    padding: 2px 7px; border-radius: 3px; font-size: 12px;
     font-family: 'JetBrains Mono', monospace;
   }
   .ext-tag-vocab { background: var(--vocab-bg); color: var(--vocab); }
@@ -254,7 +254,7 @@
     transition: border-color 0.2s;
   }
   .extraction-search:focus { border-color: var(--accent); }
-  .ext-anki-pushed { opacity: 0.5; }
+  .ext-anki-pushed { border-left: 3px solid var(--success); }
   .ext-delete {
     background: none; border: none; color: var(--text-dim);
     cursor: pointer; font-size: 16px; padding: 2px 6px;
