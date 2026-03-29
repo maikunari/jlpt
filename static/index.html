@@ -349,6 +349,7 @@
 
 <script>
 let currentEpisodeId = null;
+let currentEpisodeStatus = '';
 let currentExtractions = [];
 let currentFilter = 'all';
 let currentSearch = '';
@@ -361,8 +362,29 @@ async function init() {
   loadDueRelistens();
   // Poll for status updates
   setInterval(loadEpisodes, 5000);
+  setInterval(pollCurrentEpisode, 3000);
   setInterval(loadDueRelistens, 30000);
   setInterval(checkAnki, 30000);
+}
+
+// --- Detail view polling ---
+async function pollCurrentEpisode() {
+  if (currentEpisodeId === null) return;
+  // No need to poll if already in a terminal state
+  if (currentEpisodeStatus === 'ready' || currentEpisodeStatus.startsWith('error')) return;
+  try {
+    const r = await fetch(`/api/episodes/${currentEpisodeId}`);
+    if (!r.ok) return;
+    const ep = await r.json();
+    const wasProcessing = currentEpisodeStatus !== 'ready' && !currentEpisodeStatus.startsWith('error');
+    const nowTerminal = ep.status === 'ready' || ep.status.startsWith('error');
+    // Always update the status line so user sees downloading → transcribing → extracting
+    document.getElementById('detailMeta').textContent = `${ep.jlpt_level} · ${ep.status}`;
+    document.getElementById('retryBtn').style.display = ep.status.startsWith('error') ? '' : 'none';
+    currentEpisodeStatus = ep.status;
+    // Full refresh when we reach a terminal state to load extractions/transcript
+    if (wasProcessing && nowTerminal) openEpisode(currentEpisodeId);
+  } catch {}
 }
 
 // --- Anki status ---
@@ -469,6 +491,7 @@ async function openEpisode(id) {
     if (!r.ok) { toast('Failed to load episode'); currentEpisodeId = null; return; }
     const ep = await r.json();
 
+    currentEpisodeStatus = ep.status;
     document.getElementById('detailTitle').textContent = ep.title || 'Episode';
     document.getElementById('detailMeta').textContent = `${ep.jlpt_level} · ${ep.status}`;
     document.getElementById('listenCount').textContent = ep.listens?.length || 0;
@@ -494,6 +517,7 @@ function showList() {
   document.getElementById('listView').style.display = 'block';
   document.getElementById('detailView').classList.remove('active');
   currentEpisodeId = null;
+  currentEpisodeStatus = '';
   currentSearch = '';
   currentFilter = 'all';
   loadEpisodes();
@@ -536,17 +560,17 @@ function renderExtractions() {
       (e.reading && e.reading.toLowerCase().includes(q))
     );
   }
-  const list = document.getElementById('extractionsList');
-  
-  if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty-state"><p>No extractions yet.</p></div>';
-    return;
-  }
-  
   const unpushedCount = currentExtractions.filter(e => !e.anki_note_id).length;
   const pushAllBtn = document.getElementById('pushAllBtn');
   pushAllBtn.textContent = `Push all to Anki (${unpushedCount})`;
   pushAllBtn.disabled = unpushedCount === 0;
+
+  const list = document.getElementById('extractionsList');
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state"><p>No extractions yet.</p></div>';
+    return;
+  }
 
   list.innerHTML = filtered.map(ext => {
     const pushed = ext.anki_note_id ? 'ext-anki-pushed' : '';

@@ -1,6 +1,8 @@
 import asyncio
 import os
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse

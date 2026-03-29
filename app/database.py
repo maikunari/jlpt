@@ -3,6 +3,7 @@ import os
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Optional
 
 DB_PATH = Path(os.getenv("DB_PATH", "data/jlpt_study.db"))
 
@@ -98,7 +99,7 @@ def update_episode(eid: int, **kwargs):
         conn.execute(f"UPDATE episodes SET {sets} WHERE id = ?", vals)
         conn.commit()
 
-def get_episode(eid: int) -> dict | None:
+def get_episode(eid: int) -> Optional[dict]:
     with get_db_conn() as conn:
         row = conn.execute("SELECT * FROM episodes WHERE id = ?", (eid,)).fetchone()
         return dict(row) if row else None

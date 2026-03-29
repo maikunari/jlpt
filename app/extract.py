@@ -49,7 +49,7 @@ TRANSCRIPT:
 
     message = _client.messages.create(
         model=CLAUDE_MODEL,
-        max_tokens=4096,
+        max_tokens=8192,
         messages=[{"role": "user", "content": prompt}],
     )
 
