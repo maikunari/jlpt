@@ -194,7 +194,9 @@
   .extraction-top {
     display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px;
   }
-  .ext-japanese { font-size: 18px; font-weight: 700; }
+  .ext-japanese { font-size: 18px; font-weight: 700; line-height: 2; }
+  .ext-japanese ruby { ruby-position: over; }
+  .ext-japanese rt { font-size: 10px; font-weight: 400; color: var(--text-dim); }
   .ext-reading { font-size: 13px; color: var(--text-dim); }
   .ext-english { font-size: 14px; margin-bottom: 6px; }
   .ext-context {
@@ -579,8 +581,8 @@ function renderExtractions() {
         <input type="checkbox" class="ext-check" data-id="${ext.id}" ${ext.anki_note_id ? 'disabled' : ''}>
         <div class="extraction-body">
           <div class="extraction-top">
-            <span class="ext-japanese">${ext.japanese}</span>
-            ${ext.reading ? `<span class="ext-reading">${ext.reading}</span>` : ''}
+            <span class="ext-japanese">${ext.reading && ext.reading.includes('{') ? toRuby(ext.reading) : ext.japanese}</span>
+            ${ext.reading && !ext.reading.includes('{') ? `<span class="ext-reading">${ext.reading}</span>` : ''}
           </div>
           <div class="ext-english">${ext.english}</div>
           ${ext.context_sentence ? `<div class="ext-context">${ext.context_sentence}</div>` : ''}
@@ -603,6 +605,12 @@ function filterExtractions(type, btn) {
   btn.classList.add('active');
   document.getElementById('selectAll').checked = false;
   renderExtractions();
+}
+
+function toRuby(text) {
+  if (!text) return '';
+  // Convert 漢字{かんじ} notation → <ruby>漢字<rt>かんじ</rt></ruby>
+  return text.replace(/([^{}\n]+)\{([^}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>');
 }
 
 function searchExtractions(value) {

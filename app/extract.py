@@ -34,7 +34,7 @@ EXTRACT THREE CATEGORIES:
 For EACH item, provide:
 - "type": "vocab" | "grammar" | "collocation"
 - "japanese": the word/pattern/phrase
-- "reading": hiragana reading (for vocab; omit for grammar/collocations if obvious)
+- "reading": furigana markup using {{kanji}}{{reading}} notation on every kanji group, e.g. `食{{た}}べる` or `一方的{{いっぽうてき}}な影響{{えいきょう}}を受{{う}}ける`. Include for ALL items that contain kanji. Omit only if the item is pure kana.
 - "english": clear, concise meaning
 - "jlpt_tag": estimated JLPT level (N1-N5)
 - "context_sentence": the ACTUAL sentence from the transcript where this appeared
