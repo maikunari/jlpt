@@ -1,7 +1,7 @@
 import httpx
 import json
 
-ANKI_URL = "http://localhost:8765"
+ANKI_URL = "http://127.0.0.1:8765"
 DECK_NAME = "JLPT Podcast Study"
 MODEL_NAME = "JLPT Podcast Card"
 
