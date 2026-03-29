@@ -124,6 +124,25 @@
     text-transform: uppercase; letter-spacing: 0.5px;
   }
   .episode-date { color: var(--text-dim); font-size: 11px; }
+  .card-delete-btn {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 16px; padding: 0 2px; line-height: 1;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .episode-card:hover .card-delete-btn { opacity: 1; }
+  .card-delete-btn:hover { color: var(--accent); }
+  .edit-title-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 14px; opacity: 0.4; padding: 2px;
+    transition: opacity 0.2s;
+  }
+  .edit-title-btn:hover { opacity: 1; }
+  .title-edit-input {
+    background: var(--bg3); border: 1px solid var(--accent);
+    color: var(--text); padding: 4px 10px; border-radius: 6px;
+    font-size: 18px; font-weight: 700; font-family: inherit;
+    outline: none; min-width: 300px;
+  }
   .status-ready { background: #52b78820; color: var(--success); }
   .status-processing { background: #f4a26120; color: var(--warning); }
   .status-error { background: #e9456020; color: var(--accent); }
@@ -300,7 +319,10 @@
     <button class="back-btn" onclick="showList()">← Back to episodes</button>
     <div class="detail-header">
       <div>
-        <h2 id="detailTitle"></h2>
+        <div style="display:flex;align-items:center;gap:8px">
+          <h2 id="detailTitle"></h2>
+          <button class="edit-title-btn" onclick="startEditTitle()" title="Rename">✏️</button>
+        </div>
         <div class="episode-meta" id="detailMeta"></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
@@ -457,6 +479,7 @@ async function loadEpisodes() {
               ${statusLabel === ep.status && !['ready','error'].includes(ep.status) ? '<span class="spinner"></span> ' : ''}${statusLabel}
             </span>
             ${ep.status.startsWith('error') ? `<button class="btn btn-sm" style="padding:2px 8px;font-size:11px" onclick="event.stopPropagation();retryEpisode(${ep.id})">↺ Retry</button>` : ''}
+            <button class="card-delete-btn" onclick="event.stopPropagation();deleteEpisodeFromList(${ep.id})" title="Delete episode">×</button>
           </div>
         </div>
       `;
@@ -523,6 +546,62 @@ function showList() {
   currentSearch = '';
   currentFilter = 'all';
   loadEpisodes();
+}
+
+async function deleteEpisodeFromList(id) {
+  if (!confirm('Delete this episode and all its extractions?')) return;
+  try {
+    const r = await fetch(`/api/episodes/${id}`, { method: 'DELETE' });
+    if (!r.ok) { toast('Failed to delete episode'); return; }
+    toast('Episode deleted.');
+    loadEpisodes();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+function startEditTitle() {
+  const h2 = document.getElementById('detailTitle');
+  const current = h2.textContent;
+  const btn = document.querySelector('.edit-title-btn');
+  btn.style.display = 'none';
+  const input = document.createElement('input');
+  input.className = 'title-edit-input';
+  input.value = current;
+  h2.replaceWith(input);
+  input.focus();
+  input.select();
+  const save = async () => {
+    const newTitle = input.value.trim();
+    if (!newTitle || newTitle === current) { cancelEdit(); return; }
+    try {
+      const r = await fetch(`/api/episodes/${currentEpisodeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle }),
+      });
+      if (!r.ok) { toast('Failed to rename'); cancelEdit(); return; }
+      const newH2 = document.createElement('h2');
+      newH2.id = 'detailTitle';
+      newH2.textContent = newTitle;
+      input.replaceWith(newH2);
+      btn.style.display = '';
+      // Update in local episodes array too
+      const ep = episodes.find(e => e.id === currentEpisodeId);
+      if (ep) ep.title = newTitle;
+      toast('Renamed.');
+    } catch (e) { toast('Error: ' + e.message); cancelEdit(); }
+  };
+  const cancelEdit = () => {
+    const newH2 = document.createElement('h2');
+    newH2.id = 'detailTitle';
+    newH2.textContent = current;
+    input.replaceWith(newH2);
+    btn.style.display = '';
+  };
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') save();
+    if (e.key === 'Escape') cancelEdit();
+  });
+  input.addEventListener('blur', save);
 }
 
 async function retryEpisode(id) {

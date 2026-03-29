@@ -86,6 +86,18 @@ async def get_episode_detail(eid: int):
 async def get_episode_extractions(eid: int):
     return get_extractions(eid)
 
+class EpisodeUpdate(BaseModel):
+    title: str
+
+@app.patch("/api/episodes/{eid}")
+async def rename_episode(eid: int, data: EpisodeUpdate):
+    """Rename an episode."""
+    ep = get_episode(eid)
+    if not ep:
+        raise HTTPException(404, "Episode not found")
+    update_episode(eid, title=data.title.strip())
+    return {"ok": True}
+
 @app.post("/api/episodes/{eid}/retry")
 async def retry_episode(eid: int, bg: BackgroundTasks):
     """Re-run the full processing pipeline for a failed episode."""
