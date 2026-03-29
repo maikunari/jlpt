@@ -7,7 +7,7 @@ Personal app for extracting Japanese study material from podcasts.
 ## Setup
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.9+
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) installed (`brew install yt-dlp`)
 - ffmpeg installed (`brew install ffmpeg`)
 - [Anki](https://apps.ankiweb.net/) with [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin
@@ -17,25 +17,34 @@ Personal app for extracting Japanese study material from podcasts.
 ### Install
 
 ```bash
-cd jlpt-study-app
+cd jlpt
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
 # Copy and fill in your API keys
 cp .env.example .env
-# Edit .env with your keys
+# Edit .env with GROQ_API_KEY and ANTHROPIC_API_KEY
 ```
 
 ### Run
 
 ```bash
 source venv/bin/activate
-source .env  # or use direnv / export vars
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Open http://localhost:8000
+
+> **Note:** Use `python -m uvicorn` (not `uvicorn` directly) to ensure the venv's Python is used. The app loads `.env` automatically — no need to `source .env`.
+
+### Updating yt-dlp
+
+YouTube breaks yt-dlp regularly. If downloads fail, update it:
+
+```bash
+pip install -U yt-dlp
+```
 
 ### Access from iPhone via Tailscale
 
