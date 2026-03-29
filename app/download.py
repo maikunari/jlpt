@@ -8,8 +8,15 @@ AUDIO_DIR = Path(os.getenv("AUDIO_DIR", "data/audio"))
 # Change to "chrome" or "firefox" if preferred.
 COOKIES_BROWSER = os.getenv("COOKIES_BROWSER", "chrome")
 
-def _yt_dlp_args(extra: list) -> list:
-    """Base yt-dlp args, always including browser cookies to avoid 403s."""
+def _is_youtube(url: str) -> bool:
+    return "youtube.com" in url or "youtu.be" in url
+
+def _yt_dlp_args(extra: list, url: str = "") -> list:
+    """Base yt-dlp args. YouTube uses mobile clients (no cookies); others use browser cookies."""
+    if _is_youtube(url):
+        # ios/android clients bypass n-challenge and PO token requirements.
+        # They do NOT support --cookies-from-browser, so we omit it here.
+        return ["yt-dlp", "--extractor-arg", "youtube:player_client=ios,android"] + extra
     return ["yt-dlp", "--cookies-from-browser", COOKIES_BROWSER] + extra
 
 def download_audio(url: str, episode_id: int) -> tuple[str, str]:
@@ -19,7 +26,7 @@ def download_audio(url: str, episode_id: int) -> tuple[str, str]:
 
     # First get the title
     result = subprocess.run(
-        _yt_dlp_args(["--print", "title", "--no-download", url]),
+        _yt_dlp_args(["--print", "title", "--no-download", url], url),
         capture_output=True, text=True, timeout=30
     )
     title = result.stdout.strip() or f"Episode {episode_id}"
@@ -32,9 +39,8 @@ def download_audio(url: str, episode_id: int) -> tuple[str, str]:
             "--audio-quality", "0",
             "-o", output_template,
             "--no-playlist",
-            "--extractor-arg", "youtube:player_client=android,web_creator",
             url,
-        ]),
+        ], url),
         capture_output=True, text=True, timeout=600,
     )
     if result.returncode != 0:
