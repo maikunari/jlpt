@@ -182,6 +182,21 @@ def get_listens(episode_id: int) -> list:
         ).fetchall()
         return [dict(r) for r in rows]
 
+def delete_listen(listen_id: int, episode_id: int):
+    """Delete a listen and its associated uncompleted re-listen schedule entry."""
+    with get_db_conn() as conn:
+        conn.execute("DELETE FROM listens WHERE id = ?", (listen_id,))
+        # Remove the most recent uncompleted re-listen entry for this episode
+        conn.execute(
+            """DELETE FROM relisten_schedule WHERE id = (
+                SELECT id FROM relisten_schedule
+                WHERE episode_id = ? AND completed = 0
+                ORDER BY id DESC LIMIT 1
+            )""",
+            (episode_id,)
+        )
+        conn.commit()
+
 # --- Re-listen SRS scheduling ---
 
 RELISTEN_INTERVALS = [1, 3, 7, 14, 30]  # days after each listen

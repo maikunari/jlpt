@@ -12,8 +12,8 @@ from typing import Optional
 from app.database import (
     init_db, create_episode, update_episode, get_episode, get_all_episodes, delete_episode,
     save_extractions, get_extractions, update_extraction_anki_id, delete_extraction,
-    clear_extractions, record_listen, get_listens, get_due_relistens, get_upcoming_relistens,
-    complete_relisten,
+    clear_extractions, record_listen, get_listens, delete_listen, get_due_relistens,
+    get_upcoming_relistens, complete_relisten,
 )
 from app.download import download_audio
 from app.transcribe import transcribe_audio
@@ -176,6 +176,11 @@ async def push_all_to_anki(eid: int):
 async def mark_listen(eid: int, data: ListenCreate = ListenCreate()):
     listen_id = record_listen(eid, data.notes)
     return {"listen_id": listen_id}
+
+@app.delete("/api/episodes/{eid}/listens/{listen_id}")
+async def remove_listen(eid: int, listen_id: int):
+    delete_listen(listen_id, eid)
+    return {"ok": True}
 
 @app.get("/api/relistens/due")
 async def due_relistens():

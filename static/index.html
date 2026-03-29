@@ -166,10 +166,24 @@
   .listen-section {
     background: var(--bg2); border: 1px solid var(--border);
     border-radius: 8px; padding: 16px; margin-bottom: 16px;
+  }
+  .listen-section-top {
     display: flex; align-items: center; justify-content: space-between;
   }
   .listen-count { font-size: 14px; }
   .listen-count strong { color: var(--accent); font-size: 20px; }
+  .listen-history { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .listen-entry {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--text-dim); padding: 4px 0;
+    border-top: 1px solid var(--border);
+  }
+  .listen-undo {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 11px; padding: 2px 6px;
+    border-radius: 3px; border: 1px solid var(--border);
+  }
+  .listen-undo:hover { color: var(--accent); border-color: var(--accent); }
   
   /* Transcript toggle */
   .transcript-section { margin-bottom: 20px; }
@@ -332,12 +346,15 @@
     </div>
 
     <div class="listen-section">
-      <div class="listen-count">
-        Listens: <strong id="listenCount">0</strong>
+      <div class="listen-section-top">
+        <div class="listen-count">
+          Listens: <strong id="listenCount">0</strong>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm" onclick="markListen()">🎧 Mark listened</button>
+        </div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-sm" onclick="markListen()">🎧 Mark listened</button>
-      </div>
+      <div class="listen-history" id="listenHistory"></div>
     </div>
 
     <div class="transcript-section">
@@ -519,7 +536,14 @@ async function openEpisode(id) {
     currentEpisodeStatus = ep.status;
     document.getElementById('detailTitle').textContent = ep.title || 'Episode';
     document.getElementById('detailMeta').textContent = `${ep.jlpt_level} · ${ep.status}`;
-    document.getElementById('listenCount').textContent = ep.listens?.length || 0;
+    const listens = ep.listens || [];
+    document.getElementById('listenCount').textContent = listens.length;
+    document.getElementById('listenHistory').innerHTML = listens.map(l => `
+      <div class="listen-entry">
+        <span>Listen #${l.listen_number} — ${l.listened_at ? l.listened_at.slice(0,10) : ''}</span>
+        <button class="listen-undo" onclick="deleteListenEntry(${l.id})">↩ Undo</button>
+      </div>
+    `).join('');
     document.getElementById('retryBtn').style.display = ep.status.startsWith('error') ? '' : 'none';
     document.getElementById('transcriptContent').textContent = ep.transcript || 'No transcript yet.';
 
@@ -735,6 +759,15 @@ async function pushAll() {
     if (!r.ok) { const e = await r.json(); toast(e.detail); return; }
     const d = await r.json();
     toast(`Pushed ${d.pushed} cards to Anki${d.duplicates ? ` (${d.duplicates} duplicates skipped)` : ''}`);
+    openEpisode(currentEpisodeId);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function deleteListenEntry(listenId) {
+  try {
+    const r = await fetch(`/api/episodes/${currentEpisodeId}/listens/${listenId}`, { method: 'DELETE' });
+    if (!r.ok) { toast('Failed to remove listen'); return; }
+    toast('Listen removed.');
     openEpisode(currentEpisodeId);
   } catch (e) { toast('Error: ' + e.message); }
 }
