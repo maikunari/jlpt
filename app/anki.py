@@ -15,7 +15,10 @@ async def _anki_request(action: str, **params) -> dict:
     
     async with httpx.AsyncClient() as client:
         resp = await client.post(ANKI_URL, json=payload, timeout=10)
-        result = resp.json()
+        try:
+            result = resp.json()
+        except Exception:
+            raise Exception(f"AnkiConnect returned non-JSON response (status {resp.status_code}): {resp.text[:200]}")
         if result.get("error"):
             raise Exception(f"AnkiConnect error: {result['error']}")
         return result.get("result")

@@ -138,14 +138,17 @@ async def push_to_anki(eid: int, data: ExtractionIds):
     if not selected:
         raise HTTPException(400, "No extractions selected")
     
-    note_ids = await anki.add_notes_batch(selected, episode_title=ep.get("title", ""))
-    
+    try:
+        note_ids = await anki.add_notes_batch(selected, episode_title=ep.get("title", ""))
+    except Exception as e:
+        raise HTTPException(502, f"Anki error: {e}")
+
     pushed = 0
-    for ext, note_id in zip(selected, note_ids):
+    for ext, note_id in zip(selected, note_ids or []):
         if note_id:
             update_extraction_anki_id(ext["id"], note_id)
             pushed += 1
-    
+
     return {"pushed": pushed, "duplicates": len(selected) - pushed}
 
 @app.post("/api/episodes/{eid}/push-all-to-anki")
@@ -162,14 +165,17 @@ async def push_all_to_anki(eid: int):
     if not unpushed:
         return {"pushed": 0, "message": "All already in Anki"}
     
-    note_ids = await anki.add_notes_batch(unpushed, episode_title=ep.get("title", ""))
-    
+    try:
+        note_ids = await anki.add_notes_batch(unpushed, episode_title=ep.get("title", ""))
+    except Exception as e:
+        raise HTTPException(502, f"Anki error: {e}")
+
     pushed = 0
-    for ext, note_id in zip(unpushed, note_ids):
+    for ext, note_id in zip(unpushed, note_ids or []):
         if note_id:
             update_extraction_anki_id(ext["id"], note_id)
             pushed += 1
-    
+
     return {"pushed": pushed, "duplicates": len(unpushed) - pushed}
 
 @app.post("/api/episodes/{eid}/listen")
