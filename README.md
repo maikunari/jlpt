@@ -7,7 +7,7 @@ Personal app for extracting Japanese study material from podcasts.
 ## Setup
 
 ### Prerequisites
-- Python 3.9+
+- Python 3.11+ (required — 3.9/3.10 use LibreSSL which breaks yt-dlp downloads)
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) installed (`brew install yt-dlp`)
 - ffmpeg installed (`brew install ffmpeg`)
 - [Anki](https://apps.ankiweb.net/) with [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin
