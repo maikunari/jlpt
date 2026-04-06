@@ -1,11 +1,19 @@
 import httpx
 import json
+import re
 
 ANKI_URL = "http://127.0.0.1:8765"
 DECK_NAME = "JLPT Podcast Study"
 MODEL_NAME = "JLPT Podcast Card"
 
 _deck_ready = False
+
+
+def _to_ruby(text: str) -> str:
+    """Convert kanji{reading} markup to HTML ruby tags for Anki rendering."""
+    if not text:
+        return ""
+    return re.sub(r'([^{]+)\{([^}]+)\}', r'<ruby>\1<rt>\2</rt></ruby>', text)
 
 async def _anki_request(action: str, **params) -> dict:
     """Send a request to AnkiConnect."""
@@ -99,7 +107,7 @@ async def add_note(item: dict, episode_title: str = "") -> int:
                 "English": item.get("english") or "",
                 "Type": item.get("type") or "",
                 "JLPTLevel": item.get("jlpt_tag") or "",
-                "ContextSentence": item.get("context_sentence") or "",
+                "ContextSentence": _to_ruby(item.get("context_sentence") or ""),
                 "UsageNote": item.get("usage_note") or "",
                 "EpisodeTitle": episode_title or "",
             },
@@ -125,7 +133,7 @@ async def add_notes_batch(items: list[dict], episode_title: str = "") -> list[in
                 "English": item.get("english") or "",
                 "Type": item.get("type") or "",
                 "JLPTLevel": item.get("jlpt_tag") or "",
-                "ContextSentence": item.get("context_sentence") or "",
+                "ContextSentence": _to_ruby(item.get("context_sentence") or ""),
                 "UsageNote": item.get("usage_note") or "",
                 "EpisodeTitle": episode_title or "",
             },

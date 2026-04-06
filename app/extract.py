@@ -37,7 +37,7 @@ For EACH item, provide:
 - "reading": furigana markup using {{kanji}}{{reading}} notation on every kanji group, e.g. `食{{た}}べる` or `一方的{{いっぽうてき}}な影響{{えいきょう}}を受{{う}}ける`. Include for ALL items that contain kanji. Omit only if the item is pure kana.
 - "english": clear, concise meaning
 - "jlpt_tag": estimated JLPT level (N1-N5)
-- "context_sentence": the ACTUAL sentence from the transcript where this appeared
+- "context_sentence": the ACTUAL sentence from the transcript where this appeared. Apply the same furigana markup as "reading" — annotate every kanji group with {{reading}} notation, e.g. `彼女{{かのじょ}}は毎日{{まいにち}}勉強{{べんきょう}}している`
 - "usage_note": 1-2 sentences on nuance, register, common mistakes, or when to use this
 
 Aim for 10-20 vocab, 5-10 grammar, 5-10 collocations — quality over quantity.
