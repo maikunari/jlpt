@@ -396,22 +396,37 @@ let currentFilter = 'all';
 let currentSearch = '';
 let episodes = [];
 
+// --- Processing poll (only runs while an episode is in-flight) ---
+let _processingPollTimer = null;
+
+function startProcessingPoll() {
+  if (_processingPollTimer) return; // already running
+  _processingPollTimer = setInterval(async () => {
+    await loadEpisodes();
+    await pollCurrentEpisode();
+    const stillProcessing = episodes.some(e =>
+      e.status === 'pending' || e.status === 'processing' ||
+      e.status === 'downloading' || e.status === 'transcribing' || e.status === 'extracting');
+    if (!stillProcessing) stopProcessingPoll();
+  }, 3000);
+}
+
+function stopProcessingPoll() {
+  if (_processingPollTimer) { clearInterval(_processingPollTimer); _processingPollTimer = null; }
+}
+
 // --- Init ---
 async function init() {
   checkAnki();
-  loadEpisodes();
+  await loadEpisodes();
   loadDueRelistens();
-  // pollCurrentEpisode runs every 3s but exits immediately when nothing is processing
-  setInterval(pollCurrentEpisode, 3000);
-  // loadEpisodes only polls frequently when something is actively processing
-  setInterval(() => {
-    const isProcessing = episodes.some(e => e.status === 'pending' || e.status === 'processing'
-      || e.status === 'downloading' || e.status === 'transcribing' || e.status === 'extracting');
-    if (isProcessing) loadEpisodes();
-  }, 5000);
-  setInterval(loadEpisodes, 60000); // slow background refresh when idle
   setInterval(loadDueRelistens, 30000);
   setInterval(checkAnki, 30000);
+  // Resume polling if app is reloaded mid-processing
+  const isProcessing = episodes.some(e =>
+    e.status === 'pending' || e.status === 'processing' ||
+    e.status === 'downloading' || e.status === 'transcribing' || e.status === 'extracting');
+  if (isProcessing) startProcessingPoll();
 }
 
 // --- Detail view polling ---
@@ -526,7 +541,8 @@ async function submitEpisode() {
     if (!r.ok) { const e = await r.json(); toast(e.detail || 'Error submitting URL'); return; }
     document.getElementById('urlInput').value = '';
     toast('Processing started! This may take a few minutes.');
-    loadEpisodes();
+    await loadEpisodes();
+    startProcessingPoll();
   } catch (e) { toast('Error: ' + e.message); }
   btn.disabled = false;
 }
@@ -640,6 +656,7 @@ async function retryEpisode(id) {
     if (!r.ok) { const e = await r.json(); toast(e.detail || 'Retry failed'); return; }
     toast('Retrying… check back in a minute.');
     openEpisode(id);
+    startProcessingPoll();
   } catch (e) { toast('Error: ' + e.message); }
 }
 
